@@ -5,21 +5,26 @@ IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release)
 ENDIF()
 
-MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
+SET(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall   -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3")
+MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
+MESSAGE("Deprecated warnings: ${CMAKE_WARN_DEPRECATED}")
+
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O3")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -O3")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
 
 # Check C++11 or C++0x support
 include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 if(COMPILER_SUPPORTS_CXX11)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
    add_definitions(-DCOMPILEDWITHC11)
-   message(STATUS "Using flag -std=c++11.")
+   message(STATUS "Using flag -std=c++14.")
 elseif(COMPILER_SUPPORTS_CXX0X)
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
    add_definitions(-DCOMPILEDWITHC0X)
@@ -40,6 +45,8 @@ MESSAGE(${OpenCV_VERSION})
 
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
+MESSAGE("Pangolin found in ${Pangolin_DIR}")
+
 find_package(realsense2)
 
 include_directories(
@@ -135,6 +142,18 @@ if(realsense2_FOUND)
     )
 endif()
 
+
+# vidproc tool
+find_package(Boost 1.40 COMPONENTS program_options filesystem REQUIRED)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/vidproc_tool)
+
+add_executable(mono_video vidproc_tool/mono_video.cc)
+target_include_directories(mono_video PUBLIC ${Boost_INCLUDE_DIR})
+target_link_libraries(mono_video ${PROJECT_NAME} ${Boost_LIBRARIES})
+
+add_executable(mono_image_seq vidproc_tool/mono_image_seq.cc)
+target_include_directories(mono_image_seq PUBLIC ${Boost_INCLUDE_DIR})
+target_link_libraries(mono_image_seq ${PROJECT_NAME} ${Boost_LIBRARIES})
 
 # Build examples
 
@@ -268,6 +287,7 @@ if(realsense2_FOUND)
     target_link_libraries(recorder_realsense_T265 ${PROJECT_NAME})
 endif()
 
+if(FALSE)
 #Old examples
 
 # RGB-D examples
@@ -387,4 +407,6 @@ if(realsense2_FOUND)
     add_executable(stereo_inertial_realsense_D435i_old
             Examples_old/Stereo-Inertial/stereo_inertial_realsense_D435i.cc)
     target_link_libraries(stereo_inertial_realsense_D435i_old ${PROJECT_NAME})
+endif()
+
 endif()

@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 #endif
 
             // Pass the image to the SLAM system
-            SLAM.TrackMonocular(im,tframe); // TODO change to monocular_inertial
+            SLAM.TrackMonocular(im, cv::Mat(), tframe); // TODO change to monocular_inertial
 
 #ifdef COMPILEDWITHC11
             std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();

@@ -314,7 +314,7 @@ int main(int argc, char **argv)
         std::chrono::monotonic_clock::time_point t_Start_Track = std::chrono::monotonic_clock::now();
 #endif
         // Pass the image to the SLAM system
-        SLAM.TrackMonocular(im, timestamp, vImuMeas);
+        SLAM.TrackMonocular(im, cv::Mat(), timestamp, vImuMeas);
 
 #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t_End_Track = std::chrono::steady_clock::now();

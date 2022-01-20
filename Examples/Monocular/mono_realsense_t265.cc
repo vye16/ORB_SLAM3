@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 #endif
 
             // Pass the image to the SLAM system
-            SLAM.TrackMonocular(imCV, timestamp_ms);
+            SLAM.TrackMonocular(imCV, cv::Mat(), timestamp_ms);
 
 #ifdef REGISTER_TIMES
   #ifdef COMPILEDWITHC11

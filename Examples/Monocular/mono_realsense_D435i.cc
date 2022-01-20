@@ -276,7 +276,7 @@ int main(int argc, char **argv) {
     #endif
 #endif
         // Stereo images are already rectified.
-        SLAM.TrackMonocular(im, timestamp);
+        SLAM.TrackMonocular(im, cv::Mat(), timestamp);
 #ifdef REGISTER_TIMES
     #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t_End_Track = std::chrono::steady_clock::now();

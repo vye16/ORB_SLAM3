@@ -1563,9 +1563,13 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
 }
 
 
-Sophus::SE3f Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp, string filename)
+Sophus::SE3f Tracking::GrabImageMonocular(const cv::Mat &im, const cv::Mat &mask, const double &timestamp, string filename)
 {
+    std::cout << "GrabImageMonocular state: " << mState << std::endl;
+
     mImGray = im;
+    mImMask = mask;
+
     if(mImGray.channels()==3)
     {
         if(mbRGB)
@@ -1581,21 +1585,40 @@ Sophus::SE3f Tracking::GrabImageMonocular(const cv::Mat &im, const double &times
             cvtColor(mImGray,mImGray,cv::COLOR_BGRA2GRAY);
     }
 
+    double minval, maxval;
+    cv::minMaxLoc(mImMask, &minval, &maxval);
+    std::cout << "im: " << mImGray.size() << ", channels: " << mImGray.channels() << std::endl;
+    std::cout << "mask: " << mImMask.size() << " " << minval << " " << maxval << " " << mImMask.channels() << std::endl;
+
     if (mSensor == System::MONOCULAR)
     {
         if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET ||(lastID - initID) < mMaxFrames)
-            mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
+        {
+            mCurrentFrame = Frame(mImGray, mImMask, timestamp,
+                mpIniORBextractor,mpORBVocabulary,
+                mpCamera,mDistCoef,mbf,mThDepth);
+        }
         else
-            mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
+        {
+            mCurrentFrame = Frame(mImGray, mImMask, timestamp,
+                mpORBextractorLeft,mpORBVocabulary,
+                mpCamera,mDistCoef,mbf,mThDepth);
+        }
     }
     else if(mSensor == System::IMU_MONOCULAR)
     {
         if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET)
         {
-            mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
+            mCurrentFrame = Frame(mImGray, mImMask, timestamp,
+                mpIniORBextractor,mpORBVocabulary,
+                mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
         }
         else
-            mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
+        {
+            mCurrentFrame = Frame(mImGray, mImMask, timestamp,
+                mpORBextractorLeft,mpORBVocabulary,
+                mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
+        }
     }
 
     if (mState==NO_IMAGES_YET)
@@ -2575,8 +2598,8 @@ void Tracking::CreateInitialMapMonocular()
     std::set<MapPoint*> sMPs;
     sMPs = pKFini->GetMapPoints();
 
-    // Bundle Adjustment
     Verbose::PrintMess("New Map created with " + to_string(mpAtlas->MapPointsInMap()) + " points", Verbose::VERBOSITY_QUIET);
+    // Bundle Adjustment
     Optimizer::GlobalBundleAdjustemnt(mpAtlas->GetCurrentMap(),20);
 
     float medianDepth = pKFini->ComputeSceneMedianDepth(2);
