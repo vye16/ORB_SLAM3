@@ -1997,6 +1997,13 @@ void Tracking::Track()
                         mState = LOST;
                     }
                 }
+                /*
+                else
+                {
+                    // Bundle Adjustment
+                    Optimizer::GlobalBundleAdjustemnt(mpAtlas->GetCurrentMap(),20);
+                }
+                */
             }
             else
             {
