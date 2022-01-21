@@ -313,9 +313,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imMask, const double &timeSta
     std::chrono::steady_clock::time_point time_StartExtORB = std::chrono::steady_clock::now();
 #endif
 
-    std::cout << "starting orb extraction" << std::endl;
     ExtractORB(0, imGray, imMask, 0, 1000);
-    std::cout << "finished orb extraction" << std::endl;
 
 #ifdef REGISTER_TIMES
     std::chrono::steady_clock::time_point time_EndExtORB = std::chrono::steady_clock::now();
@@ -426,7 +424,6 @@ void Frame::AssignFeaturesToGrid()
 void Frame::ExtractORB(int flag, const cv::Mat &im, const cv::Mat &mask, const int x0, const int x1)
 {
     vector<int> vLapping = {x0,x1};
-    std::cout << "ExtractORB " << flag << " " << mask.size() << std::endl;
     if(flag==0)
     {
         monoLeft = (*mpORBextractorLeft)(im, mask, mvKeys, mDescriptors, vLapping);

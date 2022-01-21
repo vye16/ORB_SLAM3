@@ -1077,8 +1077,6 @@ namespace ORB_SLAM3
         assert(image.type() == CV_8UC1 );
         assert(mask.type() == CV_8UC1 );
 
-        std::cout << "ORBextractor mask" << mask.size() << std::endl;
-
         // Pre-compute the scale pyramid
         ComputePyramid(image, mask);
 

@@ -710,11 +710,18 @@ void System::SaveTrajectoryEuRoC(const string &filename)
     list<double>::iterator lT = mpTracker->mlFrameTimes.begin();
     list<bool>::iterator lbL = mpTracker->mlbLost.begin();
 
+    cout << mpTracker->mlRelativeFramePoses.size() << " relative frame poses" << endl;
+
+    Eigen::Quaternionf q;
+    Eigen::Vector3f t;
+
     for(auto lit=mpTracker->mlRelativeFramePoses.begin(),
         lend=mpTracker->mlRelativeFramePoses.end(); lit!=lend; lit++, lRit++, lT++, lbL++)
     {
         if(*lbL)
+        {
             continue;
+        }
 
         KeyFrame* pKF = *lRit;
         //cout << "KF: " << pKF->mnId << endl;
@@ -740,8 +747,6 @@ void System::SaveTrajectoryEuRoC(const string &filename)
 
         Trw = Trw * pKF->GetPose() * Twb; // Tcp*Tpw*Twb0=Tcb0 where b0 is the new world reference
 
-        Eigen::Quaternionf q;
-        Eigen::Vector3f t;
         if (mSensor == IMU_MONOCULAR || mSensor == IMU_STEREO || mSensor==IMU_RGBD)
         {
             Sophus::SE3f Twb = (pKF->mImuCalib.mTbc * (*lit) * Trw).inverse();

@@ -1585,11 +1585,6 @@ Sophus::SE3f Tracking::GrabImageMonocular(const cv::Mat &im, const cv::Mat &mask
             cvtColor(mImGray,mImGray,cv::COLOR_BGRA2GRAY);
     }
 
-    double minval, maxval;
-    cv::minMaxLoc(mImMask, &minval, &maxval);
-    std::cout << "im: " << mImGray.size() << ", channels: " << mImGray.channels() << std::endl;
-    std::cout << "mask: " << mImMask.size() << " " << minval << " " << maxval << " " << mImMask.channels() << std::endl;
-
     if (mSensor == System::MONOCULAR)
     {
         if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET ||(lastID - initID) < mMaxFrames)

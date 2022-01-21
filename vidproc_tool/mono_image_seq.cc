@@ -62,7 +62,7 @@ int main(int argc, char **argv)
             po::value<bool>(&use_viewer)->default_value(false),
             "use viewer")
        ("wait",
-            po::value<int>(&wait_ms)->default_value(50),
+            po::value<int>(&wait_ms)->default_value(100),
             "wait time in milliseconds")
        ("output,o",
             po::value<std::string>(),
@@ -120,6 +120,7 @@ int main(int argc, char **argv)
 
   // set up the SLAM system
   ORB_SLAM3::System SLAM(vocab_file, settings_file, ORB_SLAM3::System::MONOCULAR, use_viewer);
+  std::vector< std::pair<double, int> > tracking_states;
 
   cv::Mat img, mask;
   double cur_ts, prev_ts, t_track, dt;
@@ -127,6 +128,7 @@ int main(int argc, char **argv)
   cur_ts = 0;
 
   for (int i = 0; i < n_frames; ++i) {
+    printf("\nProcessing frame %d\n", i);
     img = cv::imread(img_files[i].string(), cv::IMREAD_UNCHANGED);
     if (img.empty()) {
       break;
@@ -134,12 +136,13 @@ int main(int argc, char **argv)
 
     if (use_masks) {
       mask = cv::imread(mask_files[i].string(), cv::IMREAD_UNCHANGED);
-      std::cout << mask.size() << " " << mask.type()  << std::endl;
     }
     
     t1 = chrono::steady_clock::now();
     SLAM.TrackMonocular(img, mask, cur_ts);
     t2 = chrono::steady_clock::now();
+
+    tracking_states.push_back(std::pair<double, int>(cur_ts, SLAM.GetTrackingState()));
 
     t_track = chrono::duration_cast<chrono::duration<double> >(t2 - t1).count();
     cur_ts += t_track + (double) wait_ms * 1e-3;
@@ -152,14 +155,31 @@ int main(int argc, char **argv)
 
   std::string kf_file = "kf_traj.txt";
   std::string traj_file = "camera_traj.txt";
+  std::string state_file = "tracking_states.txt";
   if (vm.count("output"))
   {
-    kf_file = vm["output"].as<std::string>() + "_" + kf_file;
-    traj_file = vm["output"].as<std::string>() + "_" + traj_file;
+    std::string prefix = vm["output"].as<std::string>();
+    kf_file = prefix + "_" + kf_file;
+    traj_file = prefix + "_" + traj_file;
+    state_file = prefix + "_" + state_file;
   }
 
+  // save tracking states
+  std::ofstream f(state_file.c_str());
+  f << std::fixed;
+  for (const auto& p: tracking_states)
+  {
+    std::cout << 1e9 * p.first << " " << p.second << std::endl;
+    f << std::setprecision(6) << 1e9 * p.first << " ";
+    f << std::setprecision(1) << p.second << std::endl;
+  }
+  f.close();
+
+  // save camera trajectory
   SLAM.SaveTrajectoryEuRoC(traj_file);
   printf("Saved camera poses to %s", traj_file.c_str());
+
+  // save keyframe trajectory
   SLAM.SaveKeyFrameTrajectoryEuRoC(kf_file);
   printf("Saved keyframe poses to %s", kf_file.c_str());
 
